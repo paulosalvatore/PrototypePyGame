@@ -82,7 +82,6 @@ config = {
 		[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
 		[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
 		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 	]
 }
@@ -184,14 +183,17 @@ class Player(pg.sprite.Sprite):
 					self.frame = (self.frame+1)%len(self.walkframes)
 					self.image = self.walkframes[self.frame]
 				self.animate_timer = now
+
 			if not self.image:
 				self.image = self.walkframes[self.frame]
+
 			self.redraw = False
 
 	def add_direction(self, key):
 		if key in config["direcoes"]["diretas"]:
 			if key in self.direction_stack:
 				self.direction_stack.remove(key)
+
 			self.direction_stack.append(key)
 			self.direction = self.direction_stack[-1]
 
@@ -199,6 +201,7 @@ class Player(pg.sprite.Sprite):
 		if key in config["direcoes"]["diretas"]:
 			if key in self.direction_stack:
 				self.direction_stack.remove(key)
+
 			if self.direction_stack:
 				self.direction = self.direction_stack[-1]
 
@@ -207,8 +210,10 @@ class Player(pg.sprite.Sprite):
 
 	def check_keys(self, keys):
 		self.velocity[0] = 0
+
 		if keys[pg.K_LEFT] or keys[pg.K_a]:
 			self.velocity[0] -= self.speed
+
 		if keys[pg.K_RIGHT] or keys[pg.K_d]:
 			self.velocity[0] += self.speed
 
@@ -235,8 +240,10 @@ class Player(pg.sprite.Sprite):
 
 		if collide and not self.collision_direction:
 			self.collision_direction = self.get_collision_direction(collide)
+
 		if not collide and change != 0:
 			posicaoJogador = checarPosicao(self.rect.x, self.rect.y)
+
 			if self.posicaoJogador != posicaoJogador:
 				self.posicaoJogador = posicaoJogador
 
@@ -248,6 +255,7 @@ class Player(pg.sprite.Sprite):
 		dx = self.get_finite_difference(other_sprite, 0, self.speed)
 		dy = self.get_finite_difference(other_sprite, 1, self.speed)
 		abs_x, abs_y = abs(dx), abs(dy)
+
 		if abs_x > abs_y:
 			return ("right" if dx > 0 else "left")
 		elif abs_x < abs_y:
@@ -261,8 +269,10 @@ class Player(pg.sprite.Sprite):
 		offset_low = base_offset[:]
 		offset_high[index] += delta
 		offset_low[index] -= delta
+
 		first_term = self.mask.overlap_area(other_sprite.mask, offset_high)
 		second_term = self.mask.overlap_area(other_sprite.mask, offset_low)
+
 		return first_term - second_term
 
 	def draw(self, surface):
@@ -315,14 +325,16 @@ class Control(object):
 			for j in areaVisao:
 				x = i + posicaoJogador[0]
 				y = j + posicaoJogador[1]
-				tipo = mapa[x][y]
-				tile = config["tiles"]["tipos"][tipo]
-				tileCarregado = Tiles(calcularPosicao(y, x), tipo)
 
-				if tile["block"]:
-					obstaculos.append(tileCarregado)
+				if len(mapa) > x and len(mapa[x]) > y:
+					tipo = mapa[x][y]
+					tile = config["tiles"]["tipos"][tipo]
+					tileCarregado = Tiles(calcularPosicao(y, x), tipo)
 
-				cenario.append(tileCarregado)
+					if tile["block"]:
+						obstaculos.append(tileCarregado)
+
+					cenario.append(tileCarregado)
 
 		return (pg.sprite.Group(cenario), pg.sprite.Group(obstaculos))
 
