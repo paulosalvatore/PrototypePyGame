@@ -13,7 +13,9 @@ config = {
 	"jogo": {
 		"area": (28, 18),
 		"areaJanela": (14, 9),
-		"areaVisao": 2
+		"areaVisao": 2,
+		"imagemVisao": "",
+		"imagemVisaoBase": ""
 	},
 	"tiles": {
 		"tamanho": 64,
@@ -59,10 +61,16 @@ config = {
 			pg.K_DOWN: ( 0, 1)
 		},
 		"opostas": {
-			pg.K_LEFT: "right",
-			pg.K_RIGHT: "left",
-			pg.K_UP: "bottom",
-			pg.K_DOWN: "top"
+			pg.K_LEFT: "direita",
+			pg.K_RIGHT: "esquerda",
+			pg.K_UP: "baixo",
+			pg.K_DOWN: "cima"
+		},
+		"angulos": {
+			pg.K_LEFT: 270,
+			pg.K_RIGHT: 90,
+			pg.K_UP: 180,
+			pg.K_DOWN: 0
 		}
 	},
 	"mapa": [
@@ -117,12 +125,20 @@ def carregarImagensTiles():
 def carregarImagemJogador():
 	config["jogador"]["arquivo"] = carregarImagem(config["jogador"]["nomeArquivo"])
 
+def carregarImagemVisao():
+	imagemVisao = carregarImagem("visao")
+	config["jogo"]["imagemVisao"] = imagemVisao
+	config["jogo"]["imagemVisaoBase"] = imagemVisao
+
+def alterarImagemVisao(direcao):
+	angulo = config["direcoes"]["angulos"][direcao]
+	config["jogo"]["imagemVisao"] = pg.transform.rotate(config["jogo"]["imagemVisaoBase"], angulo)
+
 class Player(pg.sprite.Sprite):
-	def __init__(self, rect, speed, direction = pg.K_RIGHT):
+	def __init__(self, rect, speed, direction = pg.K_DOWN):
 		pg.sprite.Sprite.__init__(self)
 		self.rect = pg.Rect(rect)
 		self.mask = self.make_mask()
-		self.speed = speed
 		self.direction = direction
 		self.collision_direction = None
 		self.first_collision_per_frame = None
@@ -130,7 +146,7 @@ class Player(pg.sprite.Sprite):
 		self.direction_stack = []
 		self.redraw = False
 		self.image = None
-		self.frame  = 0
+		self.frame = 0
 		self.frames = self.get_frames()
 		self.animate_timer = 0.0
 		self.animate_fps = 7.0
@@ -178,9 +194,12 @@ class Player(pg.sprite.Sprite):
 	def make_image(self):
 		now = pg.time.get_ticks()
 		if self.collision_direction == None:
-			if self.redraw or now-self.animate_timer > 1000/self.animate_fps:
+
+			alterarImagemVisao(self.direction)
+
+			if self.redraw or now - self.animate_timer > 1000 / self.animate_fps:
 				if self.direction_stack:
-					self.frame = (self.frame+1)%len(self.walkframes)
+					self.frame = (self.frame + 1) % len(self.walkframes)
 					self.image = self.walkframes[self.frame]
 				self.animate_timer = now
 
@@ -257,9 +276,9 @@ class Player(pg.sprite.Sprite):
 		abs_x, abs_y = abs(dx), abs(dy)
 
 		if abs_x > abs_y:
-			return ("right" if dx > 0 else "left")
+			return ("direita" if dx > 0 else "esquerda")
 		elif abs_x < abs_y:
-			return ("bottom" if dy > 0 else "top")
+			return ("baixo" if dy > 0 else "cima")
 		else:
 			return config["direcoes"]["opostas"][self.direction]
 
@@ -366,6 +385,7 @@ class Control(object):
 	def event_loop(self):
 		for event in pg.event.get():
 			self.keys = pg.key.get_pressed()
+
 			if event.type == pg.QUIT or self.keys[pg.K_ESCAPE]:
 				self.done = True
 			elif event.type == pg.KEYDOWN:
@@ -384,7 +404,7 @@ class Control(object):
 		self.level.fill(config["janela"]["corFundo"], self.viewport)
 		self.cenario.draw(self.level)
 		self.player.draw(self.level)
-		self.level.blit(imagemVisao, self.posicaoImagemVisao)
+		self.level.blit(config["jogo"]["imagemVisao"], self.posicaoImagemVisao)
 		self.screen.blit(self.level, (0, 0), self.viewport)
 
 	def display_fps(self):
@@ -402,13 +422,14 @@ class Control(object):
 
 def get_images(sheet, frame_indices, size):
 	frames = []
+
 	for cell in frame_indices:
 		frame_rect = ((size[0]*cell[0],size[1]*cell[1]), size)
 		frames.append(sheet.subsurface(frame_rect))
+
 	return frames
 
 def main():
-	global imagemVisao
 	os.environ['SDL_VIDEO_CENTERED'] = '1'
 	pg.init()
 	pg.display.set_caption(config["janela"]["titulo"])
@@ -416,7 +437,7 @@ def main():
 	pg.display.set_mode(config["janela"]["tamanho"])
 	carregarImagensTiles()
 	carregarImagemJogador()
-	imagemVisao = carregarImagem("visao")
+	carregarImagemVisao()
 	Control().main_loop()
 	pg.quit()
 	sys.exit()
