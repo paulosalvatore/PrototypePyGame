@@ -48,17 +48,19 @@ config = {
 		}
 	},
 	"jogador": {
-		"nomeArquivo": "skelly",
+		"nomeArquivo": "personagem",
 		"arquivo": "",
 		"tamanho": (50, 50),
-		"tamanhoReal": (31, 44)
+		"tamanhoReal": (31, 44),
+		"velocidade": 3,
+		"fpsAnimacao": 7.0
 	},
 	"direcoes": {
 		"diretas": {
 			pg.K_LEFT: (-1, 0),
-			pg.K_RIGHT: ( 1, 0),
-			pg.K_UP: ( 0,-1),
-			pg.K_DOWN: ( 0, 1)
+			pg.K_RIGHT: (1, 0),
+			pg.K_UP: (0,-1),
+			pg.K_DOWN: (0, 1)
 		},
 		"opostas": {
 			pg.K_LEFT: "direita",
@@ -149,7 +151,7 @@ class Player(pg.sprite.Sprite):
 		self.frame = 0
 		self.frames = self.get_frames()
 		self.animate_timer = 0.0
-		self.animate_fps = 7.0
+		self.animate_fps = config["jogador"]["fpsAnimacao"]
 		self.walkframes = []
 		self.walkframe_dict = self.make_frame_dict()
 		self.adjust_images()
@@ -319,7 +321,7 @@ class Control(object):
 				config["jogador"]["tamanho"][0],
 				config["jogador"]["tamanho"][1]
 			),
-			3
+			config["jogador"]["velocidade"]
 		)
 
 		self.posicaoJogador = self.player.posicaoJogador
